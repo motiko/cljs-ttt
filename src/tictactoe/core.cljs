@@ -4,25 +4,48 @@
 (enable-console-print!)
 
 ;; define your app data so that it doesn't get over-written on reload
+
 (defn new-board
   [n]
-  (vec (repeat n (vec (repeat n 0)))))
+  (vec (repeat n (vec (repeat n "B")))))
 
-(prn (new-board 3))
+(def board-size 3)
 
-(defonce app-state (atom {:text "Welocome to tic-tac-toe!"
-                          :board (new-board 3)}))
+(defonce app-state (atom {:text "Welocome to tic-tac-toe!!"
+                          :board (new-board board-size)}))
+
+
+
+(prn (new-board board-size))
+
+(defn free-spots []
+  (let [board (:board @app-state)]
+  (for  [i (range board-size)
+         j (range board-size)
+        :when (= (get-in board [i j]) "B")]
+        [i j])))
+
+(defn computer-move []
+  (let [move (rand-nth (free-spots))
+        coords (into [:board] move)]
+    (prn "?? ")
+    (swap! app-state assoc-in coords "X")
+    (prn coords)
+    ))
+
 (defn blank [i j]
       [:rect {:width 0.95
               :height 0.95
               :x i
               :y j
-              :fill (if (zero? (get-in @app-state [:board i j]))
+              :fill (if (= "B" (get-in @app-state [:board i j]))
                         "green" "yellow")
               :on-click
               (fn rect-click [e]
                 (prn "You clicked me" i j)
-                (prn (swap! app-state update-in [:board i j] inc )))}])
+                (prn (swap! app-state assoc-in [:board i j] "O" )
+                (computer-move)
+                ))}])
 
 (defn circle [i j]
   [:circle {:r 0.45
@@ -39,15 +62,18 @@
   [:center
     [:h1 (:text @app-state)]
     [:svg
-      {:view-box "0 0 3 3" :width 500 :height 500}
+      {:view-box ( str "0 0 " board-size " " board-size) :width 500 :height 500}
       (for [i (range (count (:board @app-state)))
             j (range (count (:board @app-state)))]
             (case (get-in @app-state [:board i j])
-              0 [blank i j]
-              1 [circle i j]
-              2 [cross i j])
-      )
-      ]])
+              "B" [blank i j]
+              "O" [circle i j]
+              "X" [cross i j]))]
+    [:p
+      [:button
+        {:on-click
+          (fn new-game-click [e]
+            (swap! app-state assoc :board (new-board board-size)) )} "New Game"]]])
 
 (reagent/render-component [tic-tac-toe]
                           (. js/document (getElementById "app")))
@@ -56,5 +82,4 @@
   ;; optionally touch your app-state to force rerendering depending on
   ;; your application
   (swap! app-state assoc-in [:text] "Hello")
-  (prn (:board @app-state))
-)
+  (prn (:board @app-state)))
