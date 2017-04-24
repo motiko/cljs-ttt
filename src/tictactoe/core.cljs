@@ -71,7 +71,7 @@
               :x i
               :y j
               :fill (if (= "B" (get-in @app-state [:board i j]))
-                        "green" "yellow")
+                        "lightgray")
               :on-click
               (fn rect-click [e]
                 (swap! app-state assoc-in [:board i j] "X" )
@@ -81,12 +81,12 @@
                   (swap! app-state assoc :status (game-status)))))}])
 
 (defn circle [i j]
-  [:circle {:r 0.45
+  [:circle {:r 0.40 :fill "none" :stroke-width 0.05 :stroke "darkred"
     :cx (+ 0.5 i) :cy (+ 0.5 j)}])
 
 (defn cross [i j]
   [:g
-    {:stroke "black" :stroke-width 0.2 :stroke-linecap "round"
+    {:stroke "green" :stroke-width 0.1 :stroke-linecap "round"
     :transform (str "translate(" (+ 0.5 i) "," (+ 0.5 j) ") " "scale(0.33)")}
     [:line {:x1 -1 :y1 -1 :x2 1 :y2 1}]
     [:line {:x1 1 :y1 -1 :x2 -1 :y2 1}]])
