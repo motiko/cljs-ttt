@@ -5,33 +5,65 @@
 
 ;; define your app data so that it doesn't get over-written on reload
 
+(def board-size 3)
+(def winning-k 3)
+; (def player "X")
+; (def computer "O")
+; (def blank "B")
+
 (defn new-board
   [n]
   (vec (repeat n (vec (repeat n "B")))))
 
-(def board-size 3)
-
 (defonce app-state (atom {:text "Welocome to tic-tac-toe!!"
-                          :board (new-board board-size)}))
-
-
+                          :board (new-board board-size)
+                          :status :in-progress}))
 
 (prn (new-board board-size))
 
-(defn free-spots []
-  (let [board (:board @app-state)]
+(defn free-spots [board]
   (for  [i (range board-size)
          j (range board-size)
         :when (= (get-in board [i j]) "B")]
-        [i j])))
+        [i j]))
 
-(defn computer-move []
-  (let [move (rand-nth (free-spots))
-        coords (into [:board] move)]
-    (prn "?? ")
-    (swap! app-state assoc-in coords "X")
-    (prn coords)
-    ))
+(defn draw? [board]
+  (empty? (free-spots board)))
+
+(defn vertical [board y]
+  (board y))
+
+(defn horizontal [board x]
+  (for [i (range board-size)] (get-in board [i x])))
+
+(defn diagonal-down [board]
+  (for [i (range board-size)] (get-in board [i i])))
+
+(defn diagonal-up [board]
+  (for [i (range board-size)] (get-in board [i (- (dec board-size) i)])))
+
+(defn all-lines [board]
+  (concat  [(diagonal-down board) (diagonal-up board)]
+    (for [i (range board-size)] (horizontal board i))
+    (for [i (range board-size)] (vertical board i))))
+
+(defn winning-by? [player line]
+  (every? #(= % player) (take winning-k line)))
+
+(defn winning? [board player]
+  (some (partial winning-by? player) (all-lines board) ))
+
+(defn game-status []
+  (let [board (:board @app-state)]
+  (cond
+    (winning? board "O") :computer-win
+    (winning? board "X") :player-win
+    (draw? board ) :draw
+    :else :in-progress)))
+
+(defn computer-move [board]
+  (let [move (rand-nth (free-spots board))]
+    (assoc-in board move "O")))
 
 (defn blank [i j]
       [:rect {:width 0.95
@@ -42,10 +74,11 @@
                         "green" "yellow")
               :on-click
               (fn rect-click [e]
-                (prn "You clicked me" i j)
-                (prn (swap! app-state assoc-in [:board i j] "O" )
-                (computer-move)
-                ))}])
+                (swap! app-state assoc-in [:board i j] "X" )
+                (swap! app-state assoc :status (game-status))
+                (if (= (:status @app-state) :in-progress)
+                  ((swap! app-state assoc :board (computer-move (:board @app-state)))
+                  (swap! app-state assoc :status (game-status)))))}])
 
 (defn circle [i j]
   [:circle {:r 0.45
@@ -61,10 +94,16 @@
 (defn tic-tac-toe []
   [:center
     [:h1 (:text @app-state)]
+    [:h3 (case (:status @app-state)
+                :in-progress "Your move"
+                :player-win "You win"
+                :computer-win "You lose"
+                :draw "Draw"
+                "")]
     [:svg
       {:view-box ( str "0 0 " board-size " " board-size) :width 500 :height 500}
-      (for [i (range (count (:board @app-state)))
-            j (range (count (:board @app-state)))]
+      (for [i (range board-size)
+            j (range board-size)]
             (case (get-in @app-state [:board i j])
               "B" [blank i j]
               "O" [circle i j]
@@ -73,13 +112,12 @@
       [:button
         {:on-click
           (fn new-game-click [e]
-            (swap! app-state assoc :board (new-board board-size)) )} "New Game"]]])
+            (swap! app-state assoc :board (new-board board-size))
+            (swap! app-state assoc :status :in-progress))}
+        "New Game"]]])
 
 (reagent/render-component [tic-tac-toe]
                           (. js/document (getElementById "app")))
 
 (defn on-js-reload []
-  ;; optionally touch your app-state to force rerendering depending on
-  ;; your application
-  (swap! app-state assoc-in [:text] "Hello")
   (prn (:board @app-state)))
