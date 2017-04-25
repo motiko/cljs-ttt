@@ -19,8 +19,6 @@
                           :board (new-board board-size)
                           :status :in-progress}))
 
-(prn (new-board board-size))
-
 (defn free-spots [board]
   (for  [i (range board-size)
          j (range board-size)
@@ -47,6 +45,23 @@
     (for [i (range board-size)] (horizontal board i))
     (for [i (range board-size)] (vertical board i))))
 
+(defn vertical-coords [y]
+  (map #(vector % y) (range board-size)))
+
+(defn horizontal-coords [x]
+  (map #(-> % rseq vec) (vertical-coords x)))
+
+(defn diagonal-down-coords []
+  (for [i (range board-size)]  [i i]))
+
+(defn diagonal-up-coords []
+  (for [i (range board-size)] [i (- (dec board-size) i)]))
+
+(defn all-lines-coords []
+  (concat  [(diagonal-down board) (diagonal-up board)]
+    (for [i (range board-size)] (horizontal board i))
+    (for [i (range board-size)] (vertical board i))))
+
 (defn winning-by? [player line]
   (every? #(= % player) (take winning-k line)))
 
@@ -64,6 +79,9 @@
 (defn computer-move [board]
   (let [move (rand-nth (free-spots board))]
     (assoc-in board move "O")))
+
+(defn block-attempt [board]
+  ())
 
 (defn blank [i j]
       [:rect {:width 0.95
