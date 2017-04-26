@@ -65,10 +65,18 @@
 (defn free-spot [board line-coords]
   (first (filter #(= "B" (get-in board %)) line-coords )))
 
+(defn occupied-line? [line]
+  (and (< 0 (count (filter #(= "X" %) line)))
+       (< 0 (count (filter #(= "B" %) line)))))
+
+(defn first-occupied-line [board]
+  (first (filter #(occupied-line? (get-coords board %)) (all-lines-coords))))
+
 (defn computer-move [board]
   (let [move (or 
               (not-empty (free-spot board  (first (threat-lines "O" "X" board)))) 
               (not-empty (free-spot board  (first (threat-lines "X" "O" board)))) 
+              (not-empty (free-spot board (first-occupied-line board)))
               (rand-nth (free-spots board)))]
     (assoc-in board move "O")))
 
