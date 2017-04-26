@@ -7,9 +7,7 @@
 
 (def board-size 3)
 (def winning-k 3)
-; (def player "X")
-; (def computer "O")
-; (def blank "B")
+
 
 (defn new-board
   [n]
@@ -28,23 +26,6 @@
 (defn draw? [board]
   (empty? (free-spots board)))
 
-(defn vertical [board y]
-  (board y))
-
-(defn horizontal [board x]
-  (for [i (range board-size)] (get-in board [i x])))
-
-(defn diagonal-down [board]
-  (for [i (range board-size)] (get-in board [i i])))
-
-(defn diagonal-up [board]
-  (for [i (range board-size)] (get-in board [i (- (dec board-size) i)])))
-
-(defn all-lines [board]
-  (concat  [(diagonal-down board) (diagonal-up board)]
-    (for [i (range board-size)] (horizontal board i))
-    (for [i (range board-size)] (vertical board i))))
-
 (defn vertical-coords [y]
   (map #(vector % y) (range board-size)))
 
@@ -58,15 +39,31 @@
   (for [i (range board-size)] [i (- (dec board-size) i)]))
 
 (defn all-lines-coords []
-  (concat  [(diagonal-down board) (diagonal-up board)]
-    (for [i (range board-size)] (horizontal board i))
-    (for [i (range board-size)] (vertical board i))))
+  (concat  [(diagonal-down-coords) (diagonal-up-coords)]
+    (for [i (range board-size)] (horizontal-coords i))
+    (for [i (range board-size)] (vertical-coords i))))
+
+(defn get-coords [board coords]
+  (map #(get-in board %) coords))
+
+(defn all-lines [board]
+   (map #(get-coords board %)  (all-lines-coords)))
 
 (defn winning-by? [player line]
   (every? #(= % player) (take winning-k line)))
 
 (defn winning? [board player]
   (some (partial winning-by? player) (all-lines board) ))
+
+(defn threat-by? [line]
+  (and (= 0 (count (filter #(= % "O") line))) 
+   (= (dec winning-k) (count (filter #(= % "X") line)))))
+
+(defn threat-lines [board]
+  (filter #(threat-by? (get-coords board %)) (all-lines-coords)))
+
+(defn free-spot [board line-coords]
+  (first (filter #(= "B" (get-in board %)) line-coords )))
 
 (defn game-status []
   (let [board (:board @app-state)]
@@ -77,11 +74,10 @@
     :else :in-progress)))
 
 (defn computer-move [board]
-  (let [move (rand-nth (free-spots board))]
+  (let [move (or 
+              (not-empty (free-spot board  (first (threat-lines board)))) 
+              (rand-nth (free-spots board)))]
     (assoc-in board move "O")))
-
-(defn block-attempt [board]
-  ())
 
 (defn blank [i j]
       [:rect {:width 0.95
