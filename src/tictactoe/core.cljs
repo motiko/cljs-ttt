@@ -55,15 +55,22 @@
 (defn winning? [board player]
   (some (partial winning-by? player) (all-lines board) ))
 
-(defn threat-by? [line]
-  (and (= 0 (count (filter #(= % "O") line))) 
-   (= (dec winning-k) (count (filter #(= % "X") line)))))
+(defn threat-by? [from to line]
+  (and (= 0 (count (filter #(= % to) line))) 
+   (= (dec winning-k) (count (filter #(= % from) line)))))
 
-(defn threat-lines [board]
-  (filter #(threat-by? (get-coords board %)) (all-lines-coords)))
+(defn threat-lines [from to board]
+  (filter #(threat-by? from to (get-coords board %)) (all-lines-coords)))
 
 (defn free-spot [board line-coords]
   (first (filter #(= "B" (get-in board %)) line-coords )))
+
+(defn computer-move [board]
+  (let [move (or 
+              (not-empty (free-spot board  (first (threat-lines "O" "X" board)))) 
+              (not-empty (free-spot board  (first (threat-lines "X" "O" board)))) 
+              (rand-nth (free-spots board)))]
+    (assoc-in board move "O")))
 
 (defn game-status []
   (let [board (:board @app-state)]
@@ -72,12 +79,6 @@
     (winning? board "X") :player-win
     (draw? board ) :draw
     :else :in-progress)))
-
-(defn computer-move [board]
-  (let [move (or 
-              (not-empty (free-spot board  (first (threat-lines board)))) 
-              (rand-nth (free-spots board)))]
-    (assoc-in board move "O")))
 
 (defn blank [i j]
       [:rect {:width 0.95
