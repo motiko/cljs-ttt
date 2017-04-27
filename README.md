@@ -4,7 +4,7 @@ Tic tac toe
 
 ## Overview
 
-+ [Play Live](motiko.github.io/cljs-ttt)  
++ [Play Live](https://motiko.github.io/cljs-ttt)  
 + Watch Timothy Pratley's tutorial [on youtube](https://www.youtube.com/watch?v=pIiOgTwjbes)  
 + Demo project following a guide to familiarize with cjs, reagent, and hiccup
 
