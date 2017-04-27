@@ -1,5 +1,5 @@
 (ns tictactoe.core
-  (:require [reagent.core :as reagent :refer [atom]]))
+(:require [reagent.core :as reagent :refer [atom]]))
 
 (enable-console-print!)
 
@@ -9,8 +9,7 @@
 (def winning-k 3)
 
 
-(defn new-board
-  [n]
+(defn new-board [n]
   (vec (repeat n (vec (repeat n "B")))))
 
 (defonce app-state (atom {:text "Welocome to tic-tac-toe!!"
@@ -72,11 +71,18 @@
 (defn first-occupied-line [board]
   (first (filter #(occupied-line? (get-coords board %)) (all-lines-coords))))
 
+(defn fork? [board]
+  (< 1 (count (threat-lines "X" "O" board))))
+
+(defn first-fork-threat [board]
+  (first (first (filter #(fork? (second %)) (map (fn [move] (list move (assoc-in board move "X"))) (free-spots board))))))
+
 (defn computer-move [board]
   (let [move (or 
               (not-empty (free-spot board  (first (threat-lines "O" "X" board)))) 
-              (not-empty (free-spot board  (first (threat-lines "X" "O" board)))) 
-              (not-empty (free-spot board (first-occupied-lines board)))
+              (not-empty (free-spot board  (first (threat-lines "X" "O" board))))
+              (not-empty (first-fork-threat board))
+              (not-empty (free-spot board (first-occupied-line board)))
               (rand-nth (free-spots board)))]
     (assoc-in board move "O")))
 
