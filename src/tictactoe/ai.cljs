@@ -54,11 +54,10 @@
   (some (partial winning-by? player) (all-lines board) ))
 
 (defn evaluate-board [board player]
-  (do (prn (str "Player: " (winning? board player)  "  Opponent:" (winning? board (opponent player))))
-      (cond (winning? board player) 1 
-            (winning? board (opponent player)) -1
-            (draw? board) 0 
-            :else nil)))
+  (cond (winning? board player) 1 
+        (winning? board (opponent player)) -1
+        (draw? board) 0 
+        :else nil))
 
 (defn evaluate-moves-deep [board player max-depth computer & last-move]
   (let [score (evaluate-board board computer)]
@@ -67,12 +66,9 @@
               evaluated-moves (map #(hash-map :score ((trampoline evaluate-moves-deep (% :board) (opponent player) 
                                                                  (dec max-depth) computer (% :move)) :score ) 
                                               :move (% :move)) legal-moves  )]
-          (do (prn player "++" computer "-- " max-depth "~>" (sort-by :score > evaluated-moves))
-              (prn player "++" computer "-- " max-depth "~<" (sort-by :score < evaluated-moves))
-              (prn "~~~~~~~~~" legal-moves)
-            (first (if (= player computer) 
-                     (sort-by :score > evaluated-moves)
-                     (sort-by :score < evaluated-moves))))))))
+          (first (if (= player computer) 
+                   (sort-by :score > evaluated-moves)
+                   (sort-by :score < evaluated-moves)))))))
 
 (defn find-best-move [board]
   ((evaluate-moves-deep board "O" 3 "O") :move ))
@@ -82,14 +78,14 @@
                ["B" "X" "B"] 
                ["O" "B" "X"]]
         score ((evaluate-moves-deep board "O" 1 "O") :score)]
-    (do (prn "~~" score ) (is (= score -1 )  ))))
+    (is (= score -1 )  )))
 
 (deftest eval-won-pos
   (let [board [["X" "B" "O"] 
                ["B" "X" "B"] 
                ["O" "B" "X"]]
         score ((evaluate-moves-deep board "X" 1 "X") :score)]
-    (do (prn "~~" score ) (is (= score 1 )  ))))
+    (is (= score 1 )  )))
 
 (deftest one-move-win
   (let [board [["X" "B" "B"] 
@@ -97,7 +93,7 @@
                ["O" "B" "O"]]
         result (evaluate-moves-deep board "O" 1 "O")
         move (result :move)]
-    (do (prn "!!" result)  (is (= move [2 1] )  ))))
+    (is (= move [2 1] )  )))
 
 (deftest block-one-move-win
   (let [board [["X" "B" "B"] 
