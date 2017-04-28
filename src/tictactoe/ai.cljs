@@ -71,7 +71,7 @@
                    (sort-by :score < evaluated-moves)))))))
 
 (defn find-best-move [board]
-  ((evaluate-moves-deep board "O" 3 "O") :move ))
+  ((evaluate-moves-deep board "O" 5 "O") :move ))
 
 (deftest eval-lost-pos
   (let [board [["X" "B" "O"] 

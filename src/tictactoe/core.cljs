@@ -1,6 +1,11 @@
 (ns tictactoe.core
-(:require [reagent.core :as reagent :refer [atom]]
-          [tictactoe.ai :as ai :refer [find-best-move winning? draw?]]))
+(:require-macros [cljs.core.async.macros :refer [go]])
+(:require [reagent.core :as reagent ]
+          [tictactoe.ai :as ai :refer [find-best-move winning? draw?]]
+          ;; [goog.dom :as dom]
+          ;; [goog.events :as events]
+          ;;[cljs.core.async :refer [put! chan <!]]  
+ ))
 
 (enable-console-print!)
 
@@ -9,11 +14,16 @@
 (def board-size 3)
 (def winning-k 3)
 
+;; (defn listen [el type]
+;;   (let [out (chan)]
+;;     (events/listen el type
+;;       (fn [e] (put! out e)))
+;;     out))
 
 (defn new-board [n]
   (vec (repeat n (vec (repeat n "B")))))
 
-(defonce app-state (atom {:text "Welocome to tic-tac-toe!!"
+(defonce app-state (reagent/atom {:text "Welocome to tic-tac-toe!!"
                           :board (new-board board-size)
                           :status :in-progress}))
 
@@ -41,8 +51,9 @@
             (swap! app-state assoc-in [:board i j] "X" )
             (swap! app-state assoc :status (game-status))
             (if (= (:status @app-state) :in-progress)
-              ((swap! app-state assoc :board (computer-move (:board @app-state)))
-               (swap! app-state assoc :status (game-status)))))}])
+              ((do (swap! app-state assoc :status :thinking)) 
+                (js/setTimeout #(do (swap! app-state assoc :board (computer-move (:board @app-state))) 
+                                    (swap! app-state assoc :status (game-status)))  10))))}])
 
 (defn circle [i j]
   [:circle {:r 0.40 :fill "none" :stroke-width 0.05 :stroke "darkred"
@@ -60,18 +71,19 @@
    [:h1 (:text @app-state)]
    [:h3 (case (:status @app-state)
           :in-progress "Your move"
+          :thinking "Thinking.."
           :player-win "You win"
           :computer-win "You lose"
           :draw "Draw"
           "")]
    [:svg
     {:view-box ( str "0 0 " board-size " " board-size) :width 500 :height 500}
-    (for [i (range board-size)
-          j (range board-size)]
-      (case (get-in @app-state [:board i j])
-        "B" [blank i j]
-        "O" [circle i j]
-        "X" [cross i j]))]
+    (doall (for [i (range board-size)
+                  j (range board-size)]
+              (case (get-in @app-state [:board i j])
+                "B" ^{:key (str i j)} [blank i j]
+                "O" ^{:key (str i j)} [circle i j]
+                "X" ^{:key (str i j)} [cross i j])))]
    [:p
     [:button
      {:on-click
@@ -85,3 +97,7 @@
 
 (defn on-js-reload []
   (prn (:board @app-state)))
+
+;; (let [clicks (listen (dom/getDocument) "click")]
+;;   (go (while true
+;;         (.log js/console (<! clicks )))))
