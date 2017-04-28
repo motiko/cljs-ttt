@@ -1,5 +1,7 @@
-(ns tictactoe.ai
-  (:require [cljs.test :refer-macros [deftest is testing run-tests]]))
+(ns tictactoe.workers.ai
+  (:require [cljs.test :refer-macros [deftest is testing run-tests]]
+            [butler.core :as butler]))
+
 (enable-console-print!)
 
 (def winning-k 3)
@@ -72,6 +74,12 @@
 
 (defn find-best-move [board]
   ((evaluate-moves-deep board "O" 5 "O") :move ))
+
+(defn analyze-handler [board]
+  (butler/bring! :analyze-result (find-best-move board)))
+
+(butler/serve! {:request-analyze analyze-handler})
+
 
 (deftest eval-lost-pos
   (let [board [["X" "B" "O"] 

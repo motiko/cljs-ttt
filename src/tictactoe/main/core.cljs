@@ -1,11 +1,7 @@
-(ns tictactoe.core
-(:require-macros [cljs.core.async.macros :refer [go]])
-(:require [reagent.core :as reagent ]
-          [tictactoe.ai :as ai :refer [find-best-move winning? draw?]]
-          ;; [goog.dom :as dom]
-          ;; [goog.events :as events]
-          ;;[cljs.core.async :refer [put! chan <!]]  
- ))
+(ns tictactoe.main.core
+  (:require [reagent.core :as reagent ]
+            [butler.core :as butler]
+            [tictactoe.workers.ai :as ai :refer [winning? draw?]]))
 
 (enable-console-print!)
 
@@ -14,11 +10,13 @@
 (def board-size 3)
 (def winning-k 3)
 
-;; (defn listen [el type]
-;;   (let [out (chan)]
-;;     (events/listen el type
-;;       (fn [e] (put! out e)))
-;;     out))
+(def ^:const worker-script-path "js/compiled/worker.js")
+
+(defn analyze-result-handler [[x y]]
+  (swap! app-state assoc-in [:board x y] "O")
+  (swap! app-state assoc :status (game-status)))
+
+(def ai-butler (butler/butler worker-script-path {:analyze-result analyze-result-handler}))
 
 (defn new-board [n]
   (vec (repeat n (vec (repeat n "B")))))
@@ -39,6 +37,14 @@
      (draw? board ) :draw
      :else :in-progress)))
 
+(defn on-rect-click [i j]
+  (fn rect-click [e]
+    (when (= (:status @app-state) :in-progress) 
+      (swap! app-state assoc-in [:board i j] "X" )
+      (when (= (game-status) :in-progress)
+        (swap! app-state assoc :status :thinking) 
+        (butler/work! ai-butler :request-analyze (:board @app-state))))))
+
 (defn blank [i j]
   [:rect {:width 0.95
           :height 0.95
@@ -46,14 +52,8 @@
           :y j
           :fill (if (= "B" (get-in @app-state [:board i j]))
                   "lightgray")
-          :on-click
-          (fn rect-click [e]
-            (swap! app-state assoc-in [:board i j] "X" )
-            (swap! app-state assoc :status (game-status))
-            (if (= (:status @app-state) :in-progress)
-              ((do (swap! app-state assoc :status :thinking)) 
-                (js/setTimeout #(do (swap! app-state assoc :board (computer-move (:board @app-state))) 
-                                    (swap! app-state assoc :status (game-status)))  10))))}])
+          :on-click (on-rect-click i j)
+          }])
 
 (defn circle [i j]
   [:circle {:r 0.40 :fill "none" :stroke-width 0.05 :stroke "darkred"
@@ -90,14 +90,14 @@
       (fn new-game-click [e]
         (swap! app-state assoc :board (new-board board-size))
         (swap! app-state assoc :status :in-progress))}
-     "New Game"]]])
+     "New Game"]]
+   [:p
+    [:button
+     {:on-click #(prn "QWE")}
+     "Think Worker"]]])
 
 (reagent/render-component [tic-tac-toe]
                           (. js/document (getElementById "app")))
 
 (defn on-js-reload []
-  (prn (:board @app-state)))
-
-;; (let [clicks (listen (dom/getDocument) "click")]
-;;   (go (while true
-;;         (.log js/console (<! clicks )))))
+  (prn (:status @app-state)))

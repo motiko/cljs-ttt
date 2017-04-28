@@ -10,7 +10,8 @@
                  [org.clojure/clojurescript "1.9.229"]
                  [org.clojure/core.async  "0.3.442"
                   :exclusions [org.clojure/tools.reader]]
-                 [reagent "0.6.0"]]
+                 [reagent "0.6.0"]
+                 [butler "0.2.0"]]
 
   :plugins [[lein-figwheel "0.5.10"]
             [lein-cljsbuild "1.1.5" :exclusions [[org.clojure/clojure]]]]
@@ -19,33 +20,30 @@
 
   :cljsbuild {:builds
               [{:id "dev"
-                :source-paths ["src"]
+                :source-paths ["src/tictactoe/main"]
 
-                ;; the presence of a :figwheel configuration here
-                ;; will cause figwheel to inject the figwheel client
-                ;; into your build
-                :figwheel {:on-jsload "tictactoe.core/on-js-reload"
-                           ;; :open-urls will pop open your application
-                           ;; in the default browser once Figwheel has
-                           ;; started and complied your application.
-                           ;; Comment this out once it no longer serves you.
-                           :open-urls ["http://localhost:3449/index.html"]}
+                ;; :figwheel {:on-jsload "tictactoe.main.core/on-js-reload"
+                ;;            :open-urls ["http://localhost:3449/index.html"]}
 
-                :compiler {:main tictactoe.core
-                           :asset-path "js/compiled/out"
+                :compiler {:main tictactoe.main.core
+                           :asset-path "js/compiled/ttt"
                            :output-to "resources/public/js/compiled/tictactoe.js"
-                           :output-dir "resources/public/js/compiled/out"
+                           :output-dir "resources/public/js/compiled/ttt"
                            :source-map-timestamp true
-                           ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
-                           ;; https://github.com/binaryage/cljs-devtools
                            :preloads [devtools.preload]}}
-               ;; This next build is an compressed minified build for
-               ;; production. You can build this with:
-               ;; lein cljsbuild once min
+               {:id "dev-worker"
+                :source-paths ["src/tictactoe/workers"]
+                ;; :jar true     
+                :compiler {:output-to "resources/public/js/compiled/worker.js"
+                           :output-dir "resources/public/js/compiled/worker"
+                           :source-map-timestamp true
+                           :optimizations :whitespace
+                           :pretty-print true}
+                }
                {:id "min"
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/tictactoe.js"
-                           :main tictactoe.core
+                           :main tictactoe.main.core
                            :optimizations :advanced
                            :pretty-print false}}]}
 
