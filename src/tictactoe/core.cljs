@@ -1,5 +1,6 @@
 (ns tictactoe.core
-(:require [reagent.core :as reagent :refer [atom]]))
+(:require [reagent.core :as reagent :refer [atom]]
+          [tictactoe.ai :as ai :refer [find-best-move winning? draw?]]))
 
 (enable-console-print!)
 
@@ -16,81 +17,15 @@
                           :board (new-board board-size)
                           :status :in-progress}))
 
-(defn free-spots [board]
-  (for  [i (range board-size)
-         j (range board-size)
-         :when (= (get-in board [i j]) "B")]
-    [i j]))
-
-(defn draw? [board]
-  (empty? (free-spots board)))
-
-(defn vertical-coords [y]
-  (map #(vector % y) (range board-size)))
-
-(defn horizontal-coords [x]
-  (map #(-> % rseq vec) (vertical-coords x)))
-
-(defn diagonal-down-coords []
-  (for [i (range board-size)]  [i i]))
-
-(defn diagonal-up-coords []
-  (for [i (range board-size)] [i (- (dec board-size) i)]))
-
-(defn all-lines-coords []
-  (concat  [(diagonal-down-coords) (diagonal-up-coords)]
-           (for [i (range board-size)] (horizontal-coords i))
-           (for [i (range board-size)] (vertical-coords i))))
-
-(defn get-coords [board coords]
-  (map #(get-in board %) coords))
-
-(defn all-lines [board]
-  (map #(get-coords board %)  (all-lines-coords)))
-
-(defn winning-by? [player line]
-  (every? #(= % player) (take winning-k line)))
-
-(defn winning? [board player]
-  (some (partial winning-by? player) (all-lines board) ))
-
-(defn threat-by? [from to line]
-  (and (= 0 (count (filter #(= % to) line))) 
-       (= (dec winning-k) (count (filter #(= % from) line)))))
-
-(defn threat-lines [from to board]
-  (filter #(threat-by? from to (get-coords board %)) (all-lines-coords)))
-
-(defn free-spot [board line-coords]
-  (first (filter #(= "B" (get-in board %)) line-coords )))
-
-(defn occupied-line? [line]
-  (and (< 0 (count (filter #(= "X" %) line)))
-       (< 0 (count (filter #(= "B" %) line)))))
-
-(defn first-occupied-line [board]
-  (first (filter #(occupied-line? (get-coords board %)) (all-lines-coords))))
-
-(defn fork? [board]
-  (< 1 (count (threat-lines "X" "O" board))))
-
-(defn first-fork-threat [board]
-  (first (first (filter #(fork? (second %)) (map (fn [move] (list move (assoc-in board move "X"))) (free-spots board))))))
-
 (defn computer-move [board]
-  (let [move (or 
-              (not-empty (free-spot board  (first (threat-lines "O" "X" board)))) 
-              (not-empty (free-spot board  (first (threat-lines "X" "O" board))))
-              (not-empty (first-fork-threat board))
-              (not-empty (free-spot board (first-occupied-line board)))
-              (rand-nth (free-spots board)))]
+  (let [move (ai/find-best-move board)]
     (assoc-in board move "O")))
 
 (defn game-status []
   (let [board (:board @app-state)]
     (cond
-     (winning? board "O") :computer-win
-     (winning? board "X") :player-win
+     (ai/winning? board "O") :computer-win
+     (ai/winning? board "X") :player-win
      (draw? board ) :draw
      :else :in-progress)))
 
