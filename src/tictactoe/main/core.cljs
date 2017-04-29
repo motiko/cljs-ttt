@@ -12,38 +12,34 @@
 
 (def ^:const worker-script-path "js/compiled/worker.js")
 
-(defn analyze-result-handler [[x y]]
-  (swap! app-state assoc-in [:board x y] "O")
-  (swap! app-state assoc :status (game-status)))
-
-(def ai-butler (butler/butler worker-script-path {:analyze-result analyze-result-handler}))
-
 (defn new-board [n]
   (vec (repeat n (vec (repeat n "B")))))
 
-(defonce app-state (reagent/atom {:text "Welocome to tic-tac-toe!!"
-                          :board (new-board board-size)
-                          :status :in-progress}))
+(defonce app-state (reagent/atom {:text "Welcome puny human!"
+                                  :board (new-board board-size)
+                                  :status :in-progress}))
 
-(defn computer-move [board]
-  (let [move (ai/find-best-move board)]
-    (assoc-in board move "O")))
+(defn game-status [board]
+  (cond
+   (ai/winning? board "O") :computer-win
+   (ai/winning? board "X") :player-win
+   (draw? board ) :draw
+   :else :in-progress))
 
-(defn game-status []
-  (let [board (:board @app-state)]
-    (cond
-     (ai/winning? board "O") :computer-win
-     (ai/winning? board "X") :player-win
-     (draw? board ) :draw
-     :else :in-progress)))
+(defn analyze-result-handler [[x y]]
+  (swap! app-state assoc-in [:board x y] "O")
+  (swap! app-state assoc :status (game-status (:board @app-state))))
+
+(def ai-butler (butler/butler worker-script-path {:analyze-result analyze-result-handler}))
 
 (defn on-rect-click [i j]
   (fn rect-click [e]
     (when (= (:status @app-state) :in-progress) 
       (swap! app-state assoc-in [:board i j] "X" )
-      (when (= (game-status) :in-progress)
-        (swap! app-state assoc :status :thinking) 
-        (butler/work! ai-butler :request-analyze (:board @app-state))))))
+      (if (= (game-status (:board @app-state)) :in-progress)
+        ((swap! app-state assoc :status :thinking) 
+         (butler/work! ai-butler :request-analyze (:board @app-state)))
+        (swap! app-state assoc :status (game-status (:board @app-state)))))))
 
 (defn blank [i j]
   [:rect {:width 0.95
@@ -70,31 +66,27 @@
   [:center
    [:h1 (:text @app-state)]
    [:h3 (case (:status @app-state)
-          :in-progress "Your move"
-          :thinking "Thinking.."
-          :player-win "You win"
-          :computer-win "You lose"
-          :draw "Draw"
+          :in-progress "Your move, do your best son"
+          :thinking "Thinking.. Gonna kick your ass soon"
+          :player-win "You win.. But how?"
+          :computer-win "You lose! Good Day Sir!"
+          :draw "It's a Draw, i could foresee that"
           "")]
    [:svg
     {:view-box ( str "0 0 " board-size " " board-size) :width 500 :height 500}
     (doall (for [i (range board-size)
-                  j (range board-size)]
-              (case (get-in @app-state [:board i j])
-                "B" ^{:key (str i j)} [blank i j]
-                "O" ^{:key (str i j)} [circle i j]
-                "X" ^{:key (str i j)} [cross i j])))]
+                 j (range board-size)]
+             (case (get-in @app-state [:board i j])
+               "B" ^{:key (str i j)} [blank i j]
+               "O" ^{:key (str i j)} [circle i j]
+               "X" ^{:key (str i j)} [cross i j])))]
    [:p
     [:button
      {:on-click
       (fn new-game-click [e]
         (swap! app-state assoc :board (new-board board-size))
         (swap! app-state assoc :status :in-progress))}
-     "New Game"]]
-   [:p
-    [:button
-     {:on-click #(prn "QWE")}
-     "Think Worker"]]])
+     "New Game"]]])
 
 (reagent/render-component [tic-tac-toe]
                           (. js/document (getElementById "app")))

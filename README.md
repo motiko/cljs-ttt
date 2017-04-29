@@ -10,13 +10,16 @@ Tic tac toe
 
 ## Setup
 
-To get an interactive development environment run:
+To build run:
+
 ```bash
-$ lein repl
+lein cljsbuild auto dev dev-worker &
+cd resources/public
+python -m SimpleHTTPServer
 ```
 
-```clojure
-(figwheel-sidecar.repl-api/start-figwheel!)
-(cljs-repl)
-(ns tictactoe.core)
+Deploy gh-pages:
+
+```bash
+git subtree split --prefix resources/public -b gh-pages
 ```
