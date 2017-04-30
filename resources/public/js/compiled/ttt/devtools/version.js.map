@@ -1,0 +1,1 @@
+{"version":3,"file":"\/Users\/moti\/tictactoe\/resources\/public\/js\/compiled\/ttt\/devtools\/version.js","sources":["version.cljs?rel=1493511394207"],"lineCount":9,"mappings":";AAAA;;AAGA,AAAKA,mCAAgB;AAErB,uCAAA,vCAAMC;AAAN,AACED","names":["devtools.version\/current-version","devtools.version\/get-current-version"]}
