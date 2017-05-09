@@ -14,7 +14,7 @@
                  [butler "0.2.0"]]
 
   :plugins [ [lein-cljsbuild "1.1.6"]]
-  
+
   :source-paths ["src"]
   :hooks [leiningen.cljsbuild]
   :cljsbuild {:test-commands {"ai" ["node" "resources/private/js/tests.js"]}
@@ -25,8 +25,7 @@
                            :asset-path "js/compiled/ttt"
                            :output-to "resources/public/js/compiled/tictactoe.js"
                            :output-dir "resources/public/js/compiled/ttt"
-                           :source-map-timestamp true
-                           :preloads [devtools.preload]}}
+                           :source-map-timestamp true}}
                {:id "dev-worker"
                 :source-paths ["src/tictactoe/workers"]
                 :compiler {:output-to "resources/public/js/compiled/worker.js"
@@ -35,13 +34,13 @@
                            :optimizations :whitespace
                            :pretty-print true}}
                {:id "test"
-                :source-paths ["test/tictactoe"]
-                :compiler { 
+                :source-paths ["src/tictactoe/ai" "test/tictactoe"]
+                :compiler {
                            :output-to "resources/private/js/tests.js"
                            :optimizations :simple
                            :pretty-print true
                            :target :nodejs}}
-               
+
                {:id "min"
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/tictactoe.js"

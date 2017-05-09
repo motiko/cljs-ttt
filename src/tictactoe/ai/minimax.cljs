@@ -1,7 +1,4 @@
-(ns tictactoe.workers.ai
-  (:require [butler.core :as butler]))
-
-(enable-console-print!)
+(ns tictactoe.ai.minimax)
 
 (def winning-k 3)
 
@@ -14,12 +11,12 @@
 (def opponent {"X" "O"
                "O" "X"})
 
-(defn free-spots 
+(defn free-spots
   ([board] (for  [i (range board-size)
                   j (range board-size)
                   :when (= (get-in board [i j]) "B")]
              [i j]))
-  ([board line-coords] (filter 
+  ([board line-coords] (filter
                         #(= "B" (get-in board %)) line-coords )))
 
 (defn draw? [board]
@@ -55,27 +52,21 @@
   (some (partial winning-by? player) (all-lines board) ))
 
 (defn evaluate-board [board player]
-  (cond (winning? board player) 1 
+  (cond (winning? board player) 1
         (winning? board (opponent player)) -1
-        (draw? board) 0 
+        (draw? board) 0
         :else nil))
 
 (defn evaluate-moves-deep [board player max-depth computer & last-move]
   (let [score (evaluate-board board computer)]
-    (if (or score (< max-depth 0)) (hash-map :score score :move last-move) 
-        (let [legal-moves  (map #(hash-map :board (assoc-in board % player) :move %) (free-spots board)) 
-              evaluated-moves (map #(hash-map :score ((trampoline evaluate-moves-deep (% :board) (opponent player) 
-                                                                 (dec max-depth) computer (% :move)) :score ) 
+    (if (or score (< max-depth 0)) (hash-map :score score :move last-move)
+        (let [legal-moves  (map #(hash-map :board (assoc-in board % player) :move %) (free-spots board))
+              evaluated-moves (map #(hash-map :score ((trampoline evaluate-moves-deep (% :board) (opponent player)
+                                                                 (dec max-depth) computer (% :move)) :score )
                                               :move (% :move)) legal-moves  )]
-          (first (if (= player computer) 
+          (first (if (= player computer)
                    (sort-by :score > evaluated-moves)
                    (sort-by :score < evaluated-moves)))))))
 
 (defn find-best-move [board]
   ((evaluate-moves-deep board "O" 5 "O") :move ))
-
-(defn analyze-handler [board]
-  (butler/bring! :analyze-result (find-best-move board)))
-
-(butler/serve! {:request-analyze analyze-handler})
-
