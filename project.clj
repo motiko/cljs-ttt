@@ -1,6 +1,6 @@
-(defproject tictactoe "0.1.0-SNAPSHOT"
+(defproject tictactoe "0.0.1"
   :description "Tic tac toe"
-  :url "http://example.com/FIXME"
+  :url "https://motiko.github.io/cljs-ttt"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
@@ -13,18 +13,14 @@
                  [reagent "0.6.0"]
                  [butler "0.2.0"]]
 
-  :plugins [[lein-figwheel "0.5.10"]
-            [lein-cljsbuild "1.1.5" :exclusions [[org.clojure/clojure]]]]
-
+  :plugins [ [lein-cljsbuild "1.1.6"]]
+  
   :source-paths ["src"]
-
-  :cljsbuild {:builds
+  :hooks [leiningen.cljsbuild]
+  :cljsbuild {:test-commands {"ai" ["node" "resources/private/js/tests.js"]}
+              :builds
               [{:id "dev"
                 :source-paths ["src/tictactoe/main"]
-
-                ;; :figwheel {:on-jsload "tictactoe.main.core/on-js-reload"
-                ;;            :open-urls ["http://localhost:3449/index.html"]}
-
                 :compiler {:main tictactoe.main.core
                            :asset-path "js/compiled/ttt"
                            :output-to "resources/public/js/compiled/tictactoe.js"
@@ -33,71 +29,22 @@
                            :preloads [devtools.preload]}}
                {:id "dev-worker"
                 :source-paths ["src/tictactoe/workers"]
-                ;; :jar true     
                 :compiler {:output-to "resources/public/js/compiled/worker.js"
                            :output-dir "resources/public/js/compiled/worker"
                            :source-map-timestamp true
                            :optimizations :whitespace
-                           :pretty-print true}
-                }
+                           :pretty-print true}}
+               {:id "test"
+                :source-paths ["test/tictactoe"]
+                :compiler { 
+                           :output-to "resources/private/js/tests.js"
+                           :optimizations :simple
+                           :pretty-print true
+                           :target :nodejs}}
+               
                {:id "min"
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/tictactoe.js"
                            :main tictactoe.main.core
                            :optimizations :advanced
-                           :pretty-print false}}]}
-
-  :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
-             ;; :server-port 3449 ;; default
-             ;; :server-ip "127.0.0.1"
-
-             :css-dirs ["resources/public/css"] ;; watch and update CSS
-
-             ;; Start an nREPL server into the running figwheel process
-             ;; :nrepl-port 7888
-
-             ;; Server Ring Handler (optional)
-             ;; if you want to embed a ring handler into the figwheel http-kit
-             ;; server, this is for simple ring servers, if this
-
-             ;; doesn't work for you just run your own server :) (see lein-ring)
-
-             ;; :ring-handler hello_world.server/handler
-
-             ;; To be able to open files in your editor from the heads up display
-             ;; you will need to put a script on your path.
-             ;; that script will have to take a file path and a line number
-             ;; ie. in  ~/bin/myfile-opener
-             ;; #! /bin/sh
-             ;; emacsclient -n +$2 $1
-             ;;
-             ;; :open-file-command "myfile-opener"
-
-             ;; if you are using emacsclient you can just use
-             ;; :open-file-command "emacsclient"
-
-             ;; if you want to disable the REPL
-             ;; :repl false
-
-             ;; to configure a different figwheel logfile path
-             ;; :server-logfile "tmp/logs/figwheel-logfile.log"
-
-             ;; to pipe all the output to the repl
-             ;; :server-logfile false
-             }
-
-
-  ;; setting up nREPL for Figwheel and ClojureScript dev
-  ;; Please see:
-  ;; https://github.com/bhauman/lein-figwheel/wiki/Using-the-Figwheel-REPL-within-NRepl
-  :profiles {:dev {:dependencies [[binaryage/devtools "0.9.2"]
-                                  [figwheel-sidecar "0.5.10"]
-                                  [com.cemerick/piggieback "0.2.1"]]
-                   ;; need to add dev source path here to get user.clj loaded
-                   :source-paths ["src" "dev"]
-                   ;; for CIDER
-                   ;; :plugins [[cider/cider-nrepl "0.12.0"]]
-                   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
-                   ;; need to add the compliled assets to the :clean-targets
-                   :clean-targets ^{:protect false} ["resources/public/js/compiled"
-                                                     :target-path]}})
+                           :pretty-print false}}]})
