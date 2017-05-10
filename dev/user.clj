@@ -1,5 +1,5 @@
 (ns user 
-  ())
+  (:require [cemerick.piggieback :as pb]))
 
 ;; user is a namespace that the Clojure runtime looks for and
 ;; loads if its available
@@ -16,3 +16,10 @@
 ;; you will probably want to look at
 ;; tools.namespace https://github.com/clojure/tools.namespace
 ;; and Component https://github.com/stuartsierra/component
+ (defn cljs-repl []
+   (pb/cljs-repl (cljs.repl.rhino/repl-env)))
+;; (require 'tictactoe.ai.minimax )
+;; (require '[tictactoe.ai.minimax :as mm] )
+;; (cljs-repl)
+
+

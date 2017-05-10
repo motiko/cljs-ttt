@@ -6,6 +6,10 @@
 
   :min-lein-version "2.7.1"
 
+  :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
+                                  [org.clojure/tools.nrepl "0.2.10"]]
+                   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
+
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.229"]
                  [org.clojure/core.async  "0.3.442"
@@ -15,7 +19,7 @@
 
   :plugins [ [lein-cljsbuild "1.1.6"]]
 
-  :source-paths ["src"]
+  :source-paths ["src" "dev"]
   :hooks [leiningen.cljsbuild]
   :cljsbuild {:test-commands {"ai" ["node" "resources/private/js/tests.js"]}
               :builds
