@@ -6,6 +6,7 @@
 (def O "O")
 (def B "B")
 
+
 (def board-size 3)
 
 (def opponent {"X" "O"
@@ -27,6 +28,9 @@
 
 (defn horizontal-coords [x]
   (map #(-> % rseq vec) (vertical-coords x)))
+
+(defn diagonal [sx sy dx dy]
+  (for [i (range board-size)] [(+ sx (* dx i)) (+ sy (* dy i))]))
 
 (defn diagonal-down-coords []
   (for [i (range board-size)]  [i i]))

@@ -17,13 +17,14 @@
                  [reagent "0.6.0"]
                  [butler "0.2.0"]]
 
-  :plugins [ [lein-cljsbuild "1.1.6"]]
+  :plugins [ [lein-cljsbuild "1.1.6"] [lein-figwheel "0.5.8"]]
 
   :source-paths ["src" "dev"]
   :hooks [leiningen.cljsbuild]
   :cljsbuild {:test-commands {"ai" ["node" "resources/private/js/tests.js"]}
               :builds
               [{:id "dev"
+                :figwheel true
                 :source-paths ["src/tictactoe/main"]
                 :compiler {:main tictactoe.main.core
                            :asset-path "js/compiled/ttt"
@@ -32,6 +33,7 @@
                            :source-map-timestamp true}}
                {:id "dev-worker"
                 :source-paths ["src/tictactoe/workers"]
+                :figwheel false
                 :compiler {:output-to "resources/public/js/compiled/worker.js"
                            :output-dir "resources/public/js/compiled/worker"
                            :source-map-timestamp true
@@ -47,7 +49,8 @@
 
                {:id "min"
                 :source-paths ["src"]
-                :compiler {:output-to "resources/public/js/compiled/tictactoe.js"
+                :compiler {:output-to "resources/public/js/compiled/min/tictactoe.min.js"
+                           :output-dir "resources/public/js/compiled/min"
                            :main tictactoe.main.core
                            :optimizations :advanced
                            :pretty-print false}}]})
